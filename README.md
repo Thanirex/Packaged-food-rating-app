@@ -1,3 +1,68 @@
+Project Checkpoint 2: Rulebook, Scoring, and LLM Integration
+Current Status
+The project has now moved past early experiments and into a structured, end-to-end pipeline. At this point:
+
+Rulebook completed: A JSON rulebook (scoring_rules.json) built from authoritative standards (UK FoP labelling, EU regulations, WHO guidelines).
+
+Scoring engine implemented: Nutrients are classified into green/amber/red using thresholds, weighted, and aggregated into a 0–100 health score with bands.
+
+Normalization layer ready: API outputs from OpenFoodFacts and USDA are standardized so scoring always runs on consistent input.
+
+LLM commentary integrated: Gemini API generates short, consumer-friendly explanations based on the calculated score.
+
+This means I can now scan a product, retrieve its nutrition, normalize the data, compute a health score, and get a plain-language explanation in one pipeline.
+
+Development Journey
+Rulebook and Scoring
+Built scoring_rules.json with thresholds, nutrient weights, and evidence sources. Developed a robust parser to handle conditions like >5 and <=22.5, ensuring the engine works across varied products.
+
+Normalization
+Mapped diverse nutrition keys (e.g. "Sugars (g)", "sugars") into canonical forms so scoring is reliable across different APIs.
+
+Commentary with Gemini
+Once scores are computed, they are passed to Gemini for explanation. This adds clarity by summarizing why a product is rated healthy, moderate, or less healthy, and referencing evidence sources.
+
+Architecture at This Stage
+Data Extraction
+
+Webcam barcode scan.
+
+Nutrition data fetched from OpenFoodFacts / USDA.
+
+Raw JSON saved per barcode.
+
+Normalization
+
+Keys mapped to a consistent schema.
+
+Output is standardized nutrition data.
+
+Scoring
+
+Rulebook thresholds applied.
+
+Product scored 0–100 and assigned a health band.
+
+LLM Commentary
+
+Gemini explains the result in plain language.
+
+Explanation highlights why the product received its score and which source guided the decision.
+
+Next Step
+The next development milestone is to build a UI interface:
+
+Camera integration to scan the barcode directly from the app.
+
+A health bar visualization that displays the product’s score and band.
+
+Inline commentary from Gemini showing why the product was scored that way.
+
+Clear attribution of the evidence source (e.g., UK FoP, WHO guidelines).
+
+This will transform the backend pipeline into a usable application for end users.
+
+CHECKPOINT 1:
 🎯 Current Status & My Next Hurdle
 Right now, I'm focused on building the core logic: the Rulebook and Scoring Engine.
 
