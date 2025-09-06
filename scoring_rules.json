@@ -1,0 +1,92 @@
+{
+  "reference_intakes": {
+    "energy_kj": 8400,
+    "energy_kcal": 2000,
+    "fat": 70,
+    "saturates": 20,
+    "sugars": 90,
+    "salt": 6
+  },
+  "thresholds": {
+    "food": {
+      "fat": {
+        "green": "<=3",
+        "amber": ">3 and <=17.5",
+        "red": ">17.5"
+      },
+      "saturates": {
+        "green": "<=1.5",
+        "amber": ">1.5 and <=5",
+        "red": ">5"
+      },
+      "sugars": {
+        "green": "<=5",
+        "amber": ">5 and <=22.5",
+        "red": ">22.5"
+      },
+      "salt": {
+        "green": "<=0.3",
+        "amber": ">0.3 and <=1.5",
+        "red": ">1.5"
+      }
+    },
+    "drinks": {
+      "fat": {
+        "green": "<=1.5",
+        "amber": ">1.5 and <=8.75",
+        "red": ">8.75"
+      },
+      "saturates": {
+        "green": "<=0.75",
+        "amber": ">0.75 and <=2.5",
+        "red": ">2.5"
+      },
+      "sugars": {
+        "green": "<=2.5",
+        "amber": ">2.5 and <=11.25",
+        "red": ">11.25"
+      },
+      "salt": {
+        "green": "<=0.3",
+        "amber": ">0.3 and <=0.75",
+        "red": ">0.75"
+      }
+    }
+  },
+  "weights": {
+    "sugars": 0.4,
+    "saturates": 0.25,
+    "salt": 0.2,
+    "fat": 0.15
+  },
+  "scores": {
+    "green": 100,
+    "amber": 50,
+    "red": 0
+  },
+  "bands": {
+    "healthy": {
+      "min": 70,
+      "max": 100,
+      "label": "Green Band",
+      "description": "Healthy choice"
+    },
+    "moderate": {
+      "min": 40,
+      "max": 69,
+      "label": "Amber Band",
+      "description": "Moderate health profile"
+    },
+    "less_healthy": {
+      "min": 0,
+      "max": 39,
+      "label": "Red Band",
+      "description": "Less healthy choice"
+    }
+  },
+  "evidence_sources": [
+    "UK Government Front of Pack Nutrition Labelling Guidance (2016)",
+    "EU Regulation No. 1169/2011, Annex XIII",
+    "WHO recommendations on free sugars (<10% energy intake)"
+  ]
+}
