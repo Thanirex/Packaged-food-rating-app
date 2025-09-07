@@ -169,6 +169,11 @@ The application requires one secret: the **Google Gemini API Key**. It must be s
 
 -----
 
+# Watch the Explanation video here!:
+https://drive.google.com/file/d/1HZ-p_guv1nEtKSkRtjA3JX5AAdnHVEd7/view?usp=sharing
+
+-----
+
 ## 📚 Citations for Medical/Regulatory References
 
 The scoring logic and nutritional thresholds are based on the following authoritative sources:
