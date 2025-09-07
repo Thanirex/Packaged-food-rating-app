@@ -1,6 +1,3 @@
-
-
-````markdown
 # 🍓 NutriScore-AI: Food Product Health Scanner
 
 NutriScore-AI is a tool that scans a food product's barcode, fetches its nutritional information, and provides an easy-to-understand health score and summary. It uses official UK government guidelines for its core logic and a generative AI model to provide consumer-friendly explanations.
