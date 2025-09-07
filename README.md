@@ -101,8 +101,8 @@ Follow these steps to run the application on a clean machine.
 1.  **Clone the Repository:**
 
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
+    git clone https://github.com/Thanirex/Packaged-food-rating-app.git
+    cd Packaged-food-rating-app
     ```
 
 2.  **Create and Activate a Virtual Environment:**
