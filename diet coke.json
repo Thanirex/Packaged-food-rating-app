@@ -1,0 +1,16 @@
+{
+    "source": "OpenFoodFacts",
+    "barcode": "8901764061257",
+    "name": "Diet Coke Can 250ml",
+    "ingredients": "CARBONATED WATER, ACIDITY REGULATOR (338), SWEETENERS (951,950), PRESERVATIVE (211), CAFFEINE. CONTAINS PERMITTED NATURAL COLOUR (150d) AND ADDED FLAVOURS (NATURAL FLAVOURING SUBSTANC\u00c9S).",
+    "nutrition_per_100g": {
+        "Calories (kcal)": 0,
+        "Fat (g)": 0,
+        "Saturated Fat (g)": 0,
+        "Carbohydrates (g)": 0,
+        "Sugars (g)": 0,
+        "Protein (g)": 0,
+        "Salt (g)": 0.02075,
+        "Sodium (mg)": 8.3
+    }
+}

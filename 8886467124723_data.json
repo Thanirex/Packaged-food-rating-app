@@ -1,0 +1,16 @@
+{
+    "source": "OpenFoodFacts",
+    "barcode": "8886467124723",
+    "name": "Pringles",
+    "ingredients": "Not specified",
+    "nutrition_per_100g": {
+        "Calories (kcal)": 541,
+        "Fat (g)": 30.9,
+        "Saturated Fat (g)": 15,
+        "Carbohydrates (g)": 57.6,
+        "Sugars (g)": 3.2,
+        "Protein (g)": 5,
+        "Salt (g)": 1.605,
+        "Sodium (mg)": 642.0
+    }
+}

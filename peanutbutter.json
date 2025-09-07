@@ -1,0 +1,16 @@
+{
+    "source": "OpenFoodFacts",
+    "barcode": "8901512144805",
+    "name": "Peanut butter",
+    "ingredients": "",
+    "nutrition_per_100g": {
+        "Calories (kcal)": 619,
+        "Fat (g)": 48,
+        "Saturated Fat (g)": 11.5,
+        "Carbohydrates (g)": 22.7,
+        "Sugars (g)": 9.2,
+        "Protein (g)": 26,
+        "Salt (g)": 0.355,
+        "Sodium (mg)": 142.0
+    }
+}

@@ -1,0 +1,50 @@
+{
+  "normalization": {
+    "sucrose": "sugars",
+    "glucose": "sugars",
+    "fructose": "sugars",
+    "added sugars": "sugars",
+    "sodium": "salt",
+    "Na": "salt",
+    "saturated fat": "saturates",
+    "sat fat": "saturates"
+  },
+  "nutrient_rules": {
+    "fat": {
+      "thresholds": {
+        "low": 3.0,
+        "medium": 17.5,
+        "high": 21.0
+      },
+      "unit": "g_per_100g",
+      "source": "UK FoP Nutrition Labelling Guidance 2016"
+    },
+    "saturates": {
+      "thresholds": {
+        "low": 1.5,
+        "medium": 5.0,
+        "high": 6.0
+      },
+      "unit": "g_per_100g",
+      "source": "UK FoP Nutrition Labelling Guidance 2016"
+    },
+    "sugars": {
+      "thresholds": {
+        "low": 5.0,
+        "medium": 22.5,
+        "high": 27.0
+      },
+      "unit": "g_per_100g",
+      "source": "UK FoP Nutrition Labelling Guidance 2016"
+    },
+    "salt": {
+      "thresholds": {
+        "low": 0.3,
+        "medium": 1.5,
+        "high": 1.8
+      },
+      "unit": "g_per_100g",
+      "source": "UK FoP Nutrition Labelling Guidance 2016"
+    }
+  }
+}
