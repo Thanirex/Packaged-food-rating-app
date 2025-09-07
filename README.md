@@ -1,144 +1,194 @@
-# NutriScore-AI: Food Product Health Scanner
+
+
+````markdown
+# 🍓 NutriScore-AI: Food Product Health Scanner
 
 NutriScore-AI is a tool that scans a food product's barcode, fetches its nutritional information, and provides an easy-to-understand health score and summary. It uses official UK government guidelines for its core logic and a generative AI model to provide consumer-friendly explanations.
 
 ---
 
-## High-Level Architecture
+## 🏗️ High-Level Architecture
 
 The application follows a simple, sequential data flow from data ingestion to user-facing explanation.
 
 ### Modules
-
-1.  **Barcode Scanner (`ui.py`):** Uses `OpenCV` and `Pyzbar` to access the device camera and decode a product barcode from the live video stream.
-2.  **Data Fetcher (`ui.py`):** Takes the decoded barcode and queries the **OpenFoodFacts API** to retrieve detailed product information, including the crucial nutritional values per 100g.
-3.  **Normalizer (`ui.py`):** Cleans the raw API data, extracting only the four key nutrients (fat, saturates, sugars, salt) required for scoring. It ensures the data is in a consistent format (float values).
-4.  **Scoring Engine (`ui.py`):** The core logic. It classifies each nutrient value as 'green', 'amber', or 'red' based on thresholds defined in `scoring_rules.json`. It then calculates a weighted final score out of 100.
-5.  **Explanation Generator (`ui.py`):** Sends the final score and nutrient breakdown to the **Google Gemini API**. It receives a short, easy-to-understand comment about the product's health profile.
-6.  **User Interface (`ui.py`):** A **Streamlit** web application that orchestrates the workflow and presents the final analysis to the user with visualizations.
+* 📸 **Barcode Scanner** (`ui.py`): Uses **OpenCV** and **Pyzbar** to access the device camera and decode a product barcode from the live video stream.
+* 🌐 **Data Fetcher** (`ui.py`): Takes the decoded barcode and queries the **OpenFoodFacts API** to retrieve detailed product information, including crucial nutritional values per 100g.
+* ✨ **Normalizer** (`ui.py`): Cleans the raw API data, extracting only the four key nutrients (fat, saturates, sugars, salt) required for scoring and ensuring a consistent format.
+* 🧮 **Scoring Engine** (`ui.py`): The core logic. It classifies each nutrient value as 'green', 'amber', or 'red' based on thresholds defined in `scoring_rules.json`. It then calculates a weighted final score out of 100.
+* 🤖 **Explanation Generator** (`ui.py`): Sends the final score and nutrient breakdown to the **Google Gemini API** to generate a short, easy-to-understand comment about the product's health profile.
+* 🖥️ **User Interface** (`ui.py`): A **Streamlit** web application that orchestrates the workflow and presents the final analysis to the user with visualizations.
 
 ### Data Flow
-
-[Camera] -> Barcode (string) -> [Data Fetcher] -> Raw Product Data (JSON) -> [Normalizer] -> Key Nutrients (dict) -> [Scoring Engine] -> Scored Results (JSON) -> [Explanation Generator] -> AI Comment (string) -> [UI] -> Final Analysis Page
+```mermaid
+graph TD;
+    A[Camera] -->|Barcode String| B(Data Fetcher);
+    B -->|Raw Product JSON| C(Normalizer);
+    C -->|Key Nutrients Dict| D(Scoring Engine);
+    D -->|Scored Results JSON| E(Explanation Generator);
+    E -->|AI Comment String| F(UI);
+    F --> G[Final Analysis Page];
+````
 
 ### I/O Schemas for Key Functions
 
-* **`fetch_openfoodfacts_nutrition(barcode: str) -> dict`**
-    * **Input:** A string containing the product barcode (e.g., `"8886467124723"`).
-    * **Output:** A JSON dictionary containing product metadata and nutrition facts. Example:
-        ```json
-        {
-          "source": "OpenFoodFacts",
-          "barcode": "8886467124723",
-          "name": "Potato Chips",
-          "nutrition_per_100g": {
-            "Fat (g)": 30.9,
-            "Saturated Fat (g)": 15.0,
-            "Sugars (g)": 3.2,
-            "Salt (g)": 1.605
-          }
-        }
-        ```
+#### `fetch_openfoodfacts_nutrition(barcode: str) -> dict`
 
-* **`score_product(product_data: dict, rules: dict) -> dict`**
-    * **Input:** A dictionary with normalized nutrient data and the scoring rules JSON.
-    * **Output:** A JSON dictionary with the final score, band, and detailed breakdown. Example:
-        ```json
-        {
-          "product": "Potato Chips",
-          "score": 40.0,
-          "band": "Amber Band",
-          "results": {
-            "sugars": { "value_per_100g": 3.2, "band": "green", ... },
-            "saturates": { "value_per_100g": 15.0, "band": "red", ... }
-          }
-        }
-        ```
+  * **Input:** A string containing the product barcode (e.g., `"8886467124723"`).
+  * **Output:** A JSON dictionary with product metadata and nutrition facts.
 
----
+<!-- end list -->
 
-## Scoring Design
+```json
+{
+  "source": "OpenFoodFacts",
+  "barcode": "8886467124723",
+  "name": "Potato Chips",
+  "nutrition_per_100g": {
+    "Fat (g)": 30.9,
+    "Saturated Fat (g)": 15.0,
+    "Sugars (g)": 3.2,
+    "Salt (g)": 1.605
+  }
+}
+```
 
-The scoring system is designed to convert complex nutritional data into a single, intuitive health score based on UK regulatory guidance.
+#### `score_product(product_data: dict, rules: dict) -> dict`
 
-* **What the Score Means:** The score ranges from **0 to 100**, where **100 is the healthiest** and **0 is the least healthy**. It is calculated based on the levels of four key nutrients that are recommended for limited consumption: **fat, saturated fat, total sugars, and salt.**
+  * **Input:** A dictionary with normalized nutrient data and the scoring rules JSON.
+  * **Output:** A JSON dictionary with the final score, band, and breakdown.
 
-* **Scoring Bands:** The final score falls into one of three bands:
-    * 🟢 **Green Band (Healthy):** Score 70-100
-    * 🟡 **Amber Band (Moderate):** Score 40-69
-    * 🔴 **Red Band (Less Healthy):** Score 0-39
+<!-- end list -->
 
-* **Guardrails & Logic:**
-    * The thresholds for Green/Amber/Red for each nutrient are taken directly from the UK's Front-of-Pack (FoP) guidance (see Citations).
-    * Each nutrient is assigned a **weight** to reflect its relative health impact (e.g., sugars are weighted most heavily at 40%).
-    * `Final Score = Σ (NutrientBandScore * NutrientWeight)`
-    * **Limitation:** The score does *not* account for positive nutrients like fiber, protein, vitamins, or minerals. It is purely an indicator of nutrients to be mindful of.
+```json
+{
+  "product": "Potato Chips",
+  "score": 40.0,
+  "band": "Amber Band",
+  "results": {
+    "sugars": { "value_per_100g": 3.2, "band": "green", "weighted_score": 40.0 },
+    "saturates": { "value_per_100g": 15.0, "band": "red", "weighted_score": 0.0 }
+  }
+}
+```
 
----
+-----
 
-## Installation and Execution
+## 🎯 Scoring Design
+
+The scoring system converts complex nutritional data into a single, intuitive health score based on UK regulatory guidance.
+
+  * **What the Score Means:** The score ranges from **0 to 100**, where **100 is the healthiest** and **0 is the least healthy**. It's based on four key nutrients: **fat, saturated fat, total sugars, and salt**.
+
+  * **Scoring Bands:** The final score falls into one of three bands, as defined in `scoring_rules.json`:
+
+      * 🟢 **Green Band (Healthy choice):** Score 70-100
+      * 🟡 **Amber Band (Moderate health profile):** Score 40-69
+      * 🔴 **Red Band (Less healthy choice):** Score 0-39
+
+  * **Guardrails & Logic:**
+
+      * The thresholds for Green/Amber/Red are taken directly from the UK's Front-of-Pack (FoP) guidance.
+      * Each nutrient is assigned a weight in `scoring_rules.json` to reflect its relative health impact (sugars: 40%, saturates: 25%, salt: 20%, fat: 15%).
+      * The final score is calculated as: `Σ (NutrientBandScore * NutrientWeight)`.
+      * **Limitation:** The score does not account for positive nutrients like fiber, protein, or vitamins.
+
+-----
+
+## 🚀 Installation and Execution
 
 Follow these steps to run the application on a clean machine.
 
-### 1. Installation Steps
+### 1\. Installation Steps
 
-1.  **Clone the repository:**
+1.  **Clone the Repository:**
+
     ```bash
     git clone <your-repo-url>
     cd <your-repo-name>
     ```
-2.  **Create and activate a virtual environment:**
+
+2.  **Create and Activate a Virtual Environment:**
+
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
     ```
-3.  **Install dependencies:** (You will need to create this `requirements.txt` file from your environment)
+
+3.  **Install Dependencies:**
+    *(Note: You will need to generate a `requirements.txt` file from your environment using `pip freeze > requirements.txt`)*
+
     ```bash
     pip install -r requirements.txt
     ```
+
 4.  **Configure API Key:**
-    Create a file named `.env` in the root directory and add your Gemini API key:
-    ```
-    GEMINI_API_KEY="AIzaSy..."
-    ```
-    The application will automatically load this key.
+    The application reads the Gemini API key from an environment variable.
 
-### 2. Single Command to Run End-to-End
+    **On macOS/Linux:**
 
-With the environment activated and configured, run the following command to start the web application:
+    ```bash
+    export GEMINI_API_KEY="YOUR_API_KEY_HERE"
+    ```
+
+    **On Windows (PowerShell):**
+
+    ```powershell
+    $env:GEMINI_API_KEY="YOUR_API_KEY_HERE"
+    ```
+
+### 2\. Reproducible Run Command
+
+With the environment activated and configured, run the following single command to start the web application:
 
 ```bash
 streamlit run ui.py
-This single command starts the web server, opens the application in your browser, and makes all functionality (camera scanning, analysis, etc.) available.
+```
 
-Outputs and Caching
-Where Outputs Appear
-On-Screen: All results (score, band, nutrient breakdown, AI comment, and raw data) are displayed directly on the Streamlit web interface.
+This command starts the web server, opens the app in your browser, and makes all functionality available for an end-to-end run.
 
-Run Log (Console): The terminal running the Streamlit app will show a log of activities, including API configuration status and potential errors.
+-----
 
-Backend Artifacts: The FinalBackend.ipynb script, when run, saves the raw fetched data for a barcode to a JSON file named {barcode}_data.json in the root directory.
+## 📊 Outputs and Refreshing
 
-How to Refresh a Cached Record
-The Streamlit application holds the last scanned result in its session state. To refresh or analyze a new product:
+### Where Outputs Appear
 
-Click the "📷 Scan from Camera" button again.
+  * **On-Screen UI:** All primary results are displayed directly on the **Streamlit** web interface.
+  * **Run Log (Console):** The terminal running the Streamlit app shows a log of activities, API status, and errors. The `FinalBackend.ipynb` notebook also produces a detailed console trace.
+  * **JSON Artifacts:** The backend notebook saves raw fetched data to a file named `{barcode}_data.json`.
 
-Enter a barcode in the "Manual Input" field in the sidebar and click "Analyze".
+### How to Refresh a Cached Record
 
-This will trigger a fresh API call to OpenFoodFacts and a new scoring/explanation cycle, overwriting the previous result on the screen.
+The app holds the last scanned result in its session state. To analyze a new product:
 
-Citations and References
-The scoring logic is based on the following authoritative sources:
+  * Click the "📷 **Scan from Camera**" button in the sidebar.
+  * Or, enter a new barcode in the "**Manual Input**" field and click "**Analyze**".
 
-Primary Regulatory Guidance:
+-----
 
-Department of Health & Food Standards Agency. (2016, November). Guide to creating a front of pack (FoP) nutrition label for pre-packed products sold through retail outlets. GOV.UK. This document provides the official thresholds for red, amber, and green nutrient classifications.
+## ⚙️ Config Sample
 
-European Union Legislation:
+The application requires one secret: the **Google Gemini API Key**. It must be set as an environment variable. All non-secret parameters for the scoring logic are contained in `scoring_rules.json`.
 
-REGULATION (EU) No 1169/2011 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 25 October 2011 on the provision of food information to consumers. This regulation, cited in our primary source, establishes the legal framework for food labeling in the EU and UK, including Reference Intakes (RIs).
+-----
 
-Global Health Recommendations:
+## 📚 Citations for Medical/Regulatory References
 
-World Health Organization (WHO). (2015). Guideline: Sugars intake for adults and children. Geneva: World Health Organization. This guideline, which recommends limiting free sugars to <10% of total energy intake, informed the high weighting given to sugars in our scoring model.
+The scoring logic and nutritional thresholds are based on the following authoritative sources:
+
+1.  **Primary Regulatory Guidance:**
+
+      * [Guide to creating a front of pack (FoP) nutrition label for pre-packed products sold through retail outlets](https://www.gov.uk/government/publications/front-of-pack-nutrition-labelling-guidance). (2016). *Department of Health & Food Standards Agency, GOV.UK*.
+
+2.  **European Union Legislation:**
+
+      * [REGULATION (EU) No 1169/2011 on the provision of food information to consumers](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex:32011R1169). (2011). *Official Journal of the European Union*.
+
+3.  **Global Health Recommendations:**
+
+      * [Guideline: Sugars intake for adults and children](https://www.who.int/publications/i/item/9789241549028). (2015). *World Health Organization (WHO)*.
+
+<!-- end list -->
+
+```
+```
