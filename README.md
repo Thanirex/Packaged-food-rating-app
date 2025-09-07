@@ -110,3 +110,35 @@ With the environment activated and configured, run the following command to star
 ```bash
 streamlit run ui.py
 This single command starts the web server, opens the application in your browser, and makes all functionality (camera scanning, analysis, etc.) available.
+
+Outputs and Caching
+Where Outputs Appear
+On-Screen: All results (score, band, nutrient breakdown, AI comment, and raw data) are displayed directly on the Streamlit web interface.
+
+Run Log (Console): The terminal running the Streamlit app will show a log of activities, including API configuration status and potential errors.
+
+Backend Artifacts: The FinalBackend.ipynb script, when run, saves the raw fetched data for a barcode to a JSON file named {barcode}_data.json in the root directory.
+
+How to Refresh a Cached Record
+The Streamlit application holds the last scanned result in its session state. To refresh or analyze a new product:
+
+Click the "📷 Scan from Camera" button again.
+
+Enter a barcode in the "Manual Input" field in the sidebar and click "Analyze".
+
+This will trigger a fresh API call to OpenFoodFacts and a new scoring/explanation cycle, overwriting the previous result on the screen.
+
+Citations and References
+The scoring logic is based on the following authoritative sources:
+
+Primary Regulatory Guidance:
+
+Department of Health & Food Standards Agency. (2016, November). Guide to creating a front of pack (FoP) nutrition label for pre-packed products sold through retail outlets. GOV.UK. This document provides the official thresholds for red, amber, and green nutrient classifications.
+
+European Union Legislation:
+
+REGULATION (EU) No 1169/2011 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 25 October 2011 on the provision of food information to consumers. This regulation, cited in our primary source, establishes the legal framework for food labeling in the EU and UK, including Reference Intakes (RIs).
+
+Global Health Recommendations:
+
+World Health Organization (WHO). (2015). Guideline: Sugars intake for adults and children. Geneva: World Health Organization. This guideline, which recommends limiting free sugars to <10% of total energy intake, informed the high weighting given to sugars in our scoring model.
