@@ -42,7 +42,8 @@ def fetch_openfoodfacts_nutrition(barcode):
     """Fetches nutritional information from the OpenFoodFacts API."""
     url = f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
     try:
-        res = requests.get(url, timeout=10)
+        # UPDATED: Increased timeout from 10 to 20 seconds for more reliability
+        res = requests.get(url, timeout=20)
         res.raise_for_status()
         data = res.json()
         if data.get("status") == 1 and "product" in data:
@@ -60,7 +61,7 @@ def fetch_openfoodfacts_nutrition(barcode):
             }
             nutrition_info = {k: v for k, v in nutrition_info.items() if v is not None}
             return {
-                "source": "OpenFoodFacts", 
+                "source": "OpenFoodFacts",
                 "barcode": barcode,
                 "name": product.get("product_name", "Unknown Product"),
                 "ingredients": product.get("ingredients_text_en", "Not specified"),
@@ -77,7 +78,7 @@ def scan_barcode_streamlit():
     if not cap.isOpened():
         st.error("Error: Could not open camera.")
         return None
-    
+
     barcode = None
     info_placeholder = st.empty()
     image_placeholder = st.empty()
@@ -85,7 +86,7 @@ def scan_barcode_streamlit():
 
     while True:
         ret, frame = cap.read()
-        if not ret: 
+        if not ret:
             break
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         decoded_objects = decode(Image.fromarray(frame_rgb))
@@ -101,7 +102,7 @@ def scan_barcode_streamlit():
             time.sleep(2)
             break
         image_placeholder.image(frame_rgb, use_container_width=True)
-        
+
     cap.release()
     cv2.destroyAllWindows()
     info_placeholder.empty()
@@ -110,16 +111,11 @@ def scan_barcode_streamlit():
 
 def load_rules(path="scoring_rules.json"):
     """Load scoring rules from JSON file."""
-    # If file doesn't exist, create it with default rules
     if not os.path.exists(path):
         default_rules = {
             "reference_intakes": {
-                "energy_kj": 8400,
-                "energy_kcal": 2000,
-                "fat": 70,
-                "saturates": 20,
-                "sugars": 90,
-                "salt": 6
+                "energy_kj": 8400, "energy_kcal": 2000, "fat": 70,
+                "saturates": 20, "sugars": 90, "salt": 6
             },
             "thresholds": {
                 "food": {
@@ -135,12 +131,7 @@ def load_rules(path="scoring_rules.json"):
                     "salt": {"green": "<=0.3", "amber": ">0.3 and <=0.75", "red": ">0.75"}
                 }
             },
-            "weights": {
-                "sugars": 0.40,
-                "saturates": 0.25,
-                "salt": 0.20,
-                "fat": 0.15
-            },
+            "weights": { "sugars": 0.40, "saturates": 0.25, "salt": 0.20, "fat": 0.15 },
             "scores": {"green": 100, "amber": 50, "red": 0},
             "bands": {
                 "healthy": {"min": 70, "max": 100, "label": "Green Band", "description": "Healthy choice"},
@@ -156,9 +147,9 @@ def load_rules(path="scoring_rules.json"):
         with open(path, 'w') as f:
             json.dump(default_rules, f, indent=2)
         st.info(f"Created default scoring rules file: {path}")
-    
+
     try:
-        with open(path, "r") as f: 
+        with open(path, "r") as f:
             return json.load(f)
     except json.JSONDecodeError:
         st.error(f"Error reading scoring rules from '{path}'. Please check the file format.")
@@ -168,25 +159,22 @@ def normalize_product_data(data):
     """Normalize product data for scoring."""
     nutrition = data.get("nutrition_per_100g", {})
     mapping = {
-        "sugars": ["Sugars (g)"], 
-        "saturates": ["Saturated Fat (g)"], 
-        "salt": ["Salt (g)"], 
-        "fat": ["Fat (g)"]
+        "sugars": ["Sugars (g)"], "saturates": ["Saturated Fat (g)"],
+        "salt": ["Salt (g)"], "fat": ["Fat (g)"]
     }
     normalized = {}
     for key, variants in mapping.items():
         for v in variants:
             if v in nutrition and nutrition[v] is not None:
-                try: 
+                try:
                     normalized[key] = float(nutrition[v])
                     break
-                except (ValueError, TypeError): 
+                except (ValueError, TypeError):
                     continue
-        if key not in normalized: 
+        if key not in normalized:
             normalized[key] = 0.0
     return {
-        "name": data.get("name", "Unknown"), 
-        "barcode": data.get("barcode", ""), 
+        "name": data.get("name", "Unknown"), "barcode": data.get("barcode", ""),
         "nutrition": normalized
     }
 
@@ -198,15 +186,15 @@ def classify_value(value, thresholds):
                 parts = expr.split(" and ")
                 lower = float(re.findall(r"[\d\.]+", parts[0])[0])
                 upper = float(re.findall(r"[\d\.]+", parts[1])[0])
-                if lower < value <= upper: 
+                if lower < value <= upper:
                     return band
             else:
                 bound = float(re.findall(r"[\d\.]+", expr)[0])
-                if "<=" in expr and value <= bound: 
+                if "<=" in expr and value <= bound:
                     return band
-                if ">" in expr and value > bound: 
+                if ">" in expr and value > bound:
                     return band
-        except (ValueError, IndexError): 
+        except (ValueError, IndexError):
             continue
     return "unknown"
 
@@ -215,7 +203,7 @@ def score_product(product, rules, product_type="food"):
     nutrients = product["nutrition"]
     results = {}
     total_score = 0.0
-    
+
     for n, val in nutrients.items():
         if n in rules["thresholds"][product_type]:
             thresholds = rules["thresholds"][product_type][n]
@@ -223,62 +211,43 @@ def score_product(product, rules, product_type="food"):
             subscore = rules["scores"].get(band, 0)
             weighted = subscore * rules["weights"].get(n, 0)
             results[n] = {
-                "value_per_100g": val, 
-                "band": band, 
-                "subscore": subscore, 
+                "value_per_100g": val, "band": band, "subscore": subscore,
                 "weighted_score": weighted
             }
             total_score += weighted
-    
+
     band_label = "Unknown"
     for _, info in rules["bands"].items():
-        if info["min"] <= total_score <= info["max"]: 
+        if info["min"] <= total_score <= info["max"]:
             band_label = info["label"]
             break
-    
+
     return {
-        "product": product["name"], 
-        "barcode": product["barcode"], 
-        "score": round(total_score, 1), 
-        "band": band_label, 
-        "results": results, 
+        "product": product["name"], "barcode": product["barcode"],
+        "score": round(total_score, 1), "band": band_label, "results": results,
         "evidence_sources": rules["evidence_sources"]
     }
 
 def ask_gemini_rest_api(prompt):
     """Fallback method using direct REST API call to Gemini."""
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-    
     headers = {
         'Content-Type': 'application/json',
         'x-goog-api-key': GEMINI_API_KEY
     }
-    
-    data = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ]
-    }
-    
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
+
     try:
         response = requests.post(url, headers=headers, json=data, timeout=30)
         response.raise_for_status()
         result = response.json()
         
-        # Extract text from the response
         if 'candidates' in result and len(result['candidates']) > 0:
             candidate = result['candidates'][0]
             if 'content' in candidate and 'parts' in candidate['content']:
                 parts = candidate['content']['parts']
                 if len(parts) > 0 and 'text' in parts[0]:
                     return parts[0]['text'].strip()
-        
         return "Could not extract response from Gemini API"
     except requests.exceptions.RequestException as e:
         return f"REST API error: {str(e)}"
@@ -289,7 +258,7 @@ def ask_gemini_comment(scored):
     """Generate a health comment using Gemini API."""
     if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_API_KEY_HERE":
         return "Gemini API key not configured. Please add your API key to generate health comments."
-    
+
     prompt = f"""You are a nutrition assistant.
 Product: {scored['product']}
 Score: {scored['score']} ({scored['band']}).
@@ -297,8 +266,7 @@ Nutrient breakdown:
 {json.dumps(scored['results'], indent=2)}
 
 Please give a short, consumer-friendly comment (2-3 sentences) about this product's healthiness based ONLY on the data provided."""
-    
-    # Try Python SDK first
+
     if api_configured and genai:
         try:
             model = genai.GenerativeModel("gemini-1.5-flash")
@@ -308,7 +276,6 @@ Please give a short, consumer-friendly comment (2-3 sentences) about this produc
         except Exception as e:
             st.warning(f"SDK method failed: {str(e)}, trying REST API...")
     
-    # Fallback to REST API
     return ask_gemini_rest_api(prompt)
 
 # =============== STREAMLIT UI ===============
@@ -317,7 +284,6 @@ st.set_page_config(page_title="Food Product Scanner", layout="wide")
 st.title("🍓 Food Product Health Scanner")
 st.markdown("Scan a product's barcode to get an instant health analysis.")
 
-# Display API status in sidebar
 with st.sidebar:
     st.header("System Status")
     if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_API_KEY_HERE":
@@ -327,15 +293,12 @@ with st.sidebar:
             st.warning("⚠️ Gemini API: Ready (REST)")
     else:
         st.error("❌ Gemini API: Not configured")
-    
     st.divider()
     st.header("Actions")
 
-# Initialize session state
-if 'final_score' not in st.session_state: 
+if 'final_score' not in st.session_state:
     st.session_state.final_score = None
 
-# Main functionality
 if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_API_KEY_HERE":
     if st.sidebar.button("📷 Scan from Camera", type="primary"):
         st.session_state.final_score = None
@@ -353,12 +316,11 @@ if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_API_KEY_HERE":
                         st.session_state.final_score = scored
                     else:
                         st.error("Could not load scoring rules.")
-                else: 
+                else:
                     st.error("Could not retrieve nutritional information for this product.")
-        else: 
+        else:
             st.warning("No barcode was detected.")
-    
-    # Manual barcode input option
+
     with st.sidebar.expander("Manual Input"):
         manual_barcode = st.text_input("Enter barcode:")
         if st.button("Analyze") and manual_barcode:
@@ -375,33 +337,30 @@ if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_API_KEY_HERE":
                         st.session_state.final_score = scored
                 else:
                     st.error("Could not retrieve nutritional information for this product.")
-else: 
+else:
     st.sidebar.error("Please add a valid Gemini API key to the code.")
 
-# Main content area
 st.header("Analysis Results")
 
 if st.session_state.final_score:
     score_data = st.session_state.final_score
     score_value = score_data['score']
     
-    # Product name
     st.subheader(f"📦 {score_data.get('raw_data', {}).get('name', 'Unknown Product')}")
     
-    # Health Score
     st.subheader(f"Health Score: {score_value}/100")
-    color = "green" if 70 <= score_value <= 100 else "orange" if 30 <= score_value < 70 else "red"
+    color = "green" if 70 <= score_value <= 100 else "orange" if 40 <= score_value < 70 else "red"
     st.markdown(
         f'<div style="background-color: #eee; border-radius: 10px; padding: 3px;">'
         f'<div style="background-color: {color}; width: {score_value}%; height: 25px; '
         f'border-radius: 7px; text-align: center; color: white; font-weight: bold; '
-        f'line-height: 25px;">{score_value}</div></div>', 
+        f'line-height: 25px;">{score_value}</div></div>',
         unsafe_allow_html=True
     )
     st.markdown(f"**Overall Rating: <span style='color:{color};'>{score_data['band']}</span>**", unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 3])
-    with col1: 
+    with col1:
         st.info(f"**Expert Comment:**\n\n{score_data['llm_comment']}")
     with col2:
         st.subheader("Key Nutrient Indicators")
@@ -413,13 +372,12 @@ if st.session_state.final_score:
                 with metric_cols[i]:
                     emoji = color_map.get(details['band'], "⚪")
                     st.metric(
-                        label=f"{emoji} {nutrient.capitalize()}", 
+                        label=f"{emoji} {nutrient.capitalize()}",
                         value=f"{details['value_per_100g']}g"
                     )
     
     st.divider()
 
-    # Display nutritional components in a table
     st.subheader("Nutritional Components (per 100g)")
     nutrition_dict = score_data.get('raw_data', {}).get('nutrition_per_100g', {})
     if nutrition_dict:
@@ -428,15 +386,14 @@ if st.session_state.final_score:
     else:
         st.write("No detailed nutritional data available.")
 
-    # Display ingredients if available
     ingredients = score_data.get('raw_data', {}).get('ingredients', '')
     if ingredients and ingredients != "Not specified":
         with st.expander("Ingredients"):
             st.write(ingredients)
 
     with st.expander("Authoritative Sources"):
-        for source in score_data['evidence_sources']: 
+        for source in score_data['evidence_sources']:
             st.markdown(f"- {source}")
 
-else: 
+else:
     st.info("Scan a product to see the analysis here. You can use the camera or enter a barcode manually in the sidebar.")
